@@ -1,0 +1,302 @@
+# PACSman
+
+PACSman IDL Suite for Herschel/PACS spectrometer data
+
+
+## Disclaimers
+
+***************************************************************************************************
+************* This software comes with *no warranty*, use it at your own risk *****************
+************* Please contact the authors for updates and questions, there is no *****************
+************* online version. PACSman is an alternative to a few steps in HIPE ****************
+************* It is strongly advised to compare to HIPE results                 ****************
+***************************************************************************************************
+
+## Reference
+
+***************************************************************************************************
+************* If you use PACSman in a publication, the relevant reference is *******************
+************* Lebouteiller et al. 2012, A&A, 548, 91 ********************************************
+************* http://adsabs.harvard.edu/abs/2012A%26A...548A..91L *******************************
+***************************************************************************************************
+
+
+## Components
+
+The PACSman components are independent and do not require the other programs to run
+
+Main routines:
+- PACSman_fit: line fitting routine
+- PACSman_map: creates the projected raster maps
+- PACSman_analysis: measure fluxes and source geometry
+- PACSman_fitpsf: optimal extraction of single point source in footprint
+- PACSman_fittwopsf: optimal extraction of two point sources in footprint
+
+Special (not documented yet):
+- PACSman_transients: procedure to call within HIPE to remove the transients in unchopped observations
+
+Specific purpose routines (not documented yet):
+- PACSman_convert: convert IDL structure of the spectra into an ASCII file
+- PACSman_mosaic: creates a 5x5 spectral mosaic of a footprint
+- PACSman_footprint: measures the flux of a line in various ways for a pointed observation 
+- merge_cubes: merge flux cubes to make a single cube
+- PACSman_psf: creates PSF template to compare to pointed observation, in preparation
+- split: split the FITS files cube into one file per plane
+- PACSman_makereg(2): makes DS9 region files 
+
+PACSman contains and uses the following IDL packages:
+- polyclip from JD Smith's CUBISM software: http://tir.astro.utoledo.edu/jdsmith/code/idl.php
+- the MPFIT library: http://www.physics.wisc.edu/~craigm/idl/
+- the princeton IDL library: http://spectro.princeton.edu/
+
+## Installation
+
+Tested on IDL 7.* and IDL 8.0 on a Mac OSX 10.6
+
+- Place the PACSman routines in the IDL path.
+- Compile the routine to be used, e.g., .com PACSman_fit
+- Help: you can simply type the name of the program to have the list of possible inputs
+
+
+## Versions
+
+3.0: 
+All routines:
+	- Changed arrays into IDL structures. New output files. Continuum maps. Fixed bugs on velocity and FWHM maps. 
+	Conversion script for exporting ascii arrays.
+
+3.4:
+Known bugs:
+	- the mapping projection routine PACSman_map would overestimate the fluxes (total in map and per pixel) by 
+	between ~10% and 20%, depending on several parameters (position angle, map sampling)
+
+3.5: 
+PACSman_fit:
+	- added obsid optional parameter to append obsid number to output directories
+	- fixed a bug to calculate cycle number in observations with more than 10 cubes
+	- rebinned spectra are now all in the same wavelength scale for a given observation (i.e., for all raster 
+	positions and all spaxels)
+	- improved plots (ranges and axes)
+	- fixed a bug in which a small fraction of masked pixels at the edges were not flagged as such
+PACSman_map:
+	- the contribution of each spaxel to a given grid pixel is now calculated using polyclip from JD Smith, which
+	calculates the intersection area
+	- removed inverse rotation using PA before projection. This caused a bug with slight coordinates shifts
+	- spaxels are rotated using PA of cube, and not a global PA value (relevant to projection of several independent exacubes)
+	- "ortho" maps are not used anymore. There is just Flux.fits, and Flux_raw.fits, and a smoothed version (see below)
+	- smoothed maps are now provided instead or "ortho". This is just the cube smoothed by interpolation with a
+	small rotation angle (and inverse transformation)
+	- possibility to load background image in batch mode (e.g., DSS)
+	- fixed some bugs related to batch mode with no X server
+	- fixed a bug concerning merged cubes and files being written at the wrong place
+	- now providing projected spectral rebinned cube in MJy/sr
+	- fixed a bug concerning the spectra displayed when clicking on the images
+PACSman_analysis:
+	- PACSman_analysis uses Flux.fits maps since ortho maps are not used anymore (see above)
+merge_cubes:
+	- changed output name to cube_merged.sav instead of merged_cube.sav
+Known bugs:
+	- Line map tab doesn't work
+	
+3.51:
+PACSman_fit:
+	- cube_fitparams.params was integer, changed to float (useful when using parameters to plot spectra)
+	- changed cube_params.instrumental_fwhm to cube_params.reference_fwhm
+	- corrected a bug for when several cycles, the number of cycles was changed back to 1
+PACSman_mosaic:
+	- plots have been updated, with the fit overlaid and common axes
+PACSman_convert:
+	- fitted flux is now provided as another column
+PACSman_analysis:
+	- fixed bug that caused a crash when aperture radius was changed
+
+3.52:
+PACSman_fit:
+	- keyword no_correction_factor was removed. The correction only applies to old data with time dependence <13 
+	in getCalTree(obs=obs).spectrometer). If the correction is needed, use the following keyword instead: /use_correction_factor
+	- now providing /plots_publi switch for plots that can be used in publications (larger character size, less info etc...)
+PACSman_map:
+	- was overwriting color table 39. The default colors1.tbl (to copy in idlxx/resource/colors) is now provided 
+	in the PACSman/misc directory if one wants to revert to it. The new code now creates new color table (41 and 46) instead of overwriting 39
+	- line_map is created automatically. Background image is chosen if input
+	- corrected problem for big maps: spectral projection will not be performed. Projection of line fluxes will 
+	still be performed and output products will be written
+merge_cubes:
+	- fixed a bug when merging cubes and merged/ directory already exists
+	- fixed bug when merging cubes with fits done with a different poly_degree parameter
+PACSman_mosaic:
+	- shifted the relevant row to agree with global footprint look
+PACSman_footprint:
+	- removed /combine keyword. If the 3x3 spectrum is available, the program will use it and display the flux
+PACSman_fitpsf:
+	- in preparation
+
+3.53
+PACSman_transient:
+	- now removing large scale at the very beginning and end of the timeline. This is especially relevant for the 
+	transient systematically observed after the calibration block.
+PACSman_fitpsf:
+	- available by request
+PACSman_map:
+	- Line map improved, with possibility to overplot fits or data. When choosing fits, the detection level in 
+	sigma is shown in each spaxel
+
+3.54
+General
+	- fixed legend bug for IDL 8.2
+	- fixed some incompatibilities between polyclip procedure call used by CUBISM and PACSman
+PACSman_map
+	- updated error propagation for maps. Errors are not quadratically combined anymore because it is assumed 
+	that various spaxels from various raster positions do not correspond to the same measurement method (i.e., they are not independent
+	repetitions using the same measurement method of the same quantity). The reason for this is that the flux in the map are projected using
+	different spaxels, which are calibrated differently, which don't fully coincide spatially (even though this is partly taken care of by the projection), 
+	and which were not observed at the same time (which is ok in theory but the telescope and the calibration, hence the measurement apparel, may change). This
+	is why we now take the maximum error instead of the quadratically-combined errors
+	- fixed bug for line map creation
+	- ds9 region files are better calculated
+	- the position angle is now accounted for individually for each observation when cubes from different OBSIDs are merged
+	- added calibration errors option
+PACSman_fit
+	- fixed some problems with very bright lines and the empirical error estimates in steep part of the line
+	- empirical errors on rebinned spectrum were underestimated by a factor of 2 - It has no effect on the line 
+	flux uncertainty as these errors are just used in the form of relative weights.
+	- added Monte-Carlo error estimate (as an optional keyword)
+	- the wavelength bin size (used for the plots and for estimating the data cloud dispersion and empirical error 
+	bars on flux density) is now automatically calculated unless the 'sampling' keyword is used. The bin size is adjusted to have enough data points in each bin
+
+3.55
+PACSman_fit:
+	- Several changes affecting multiple components: replaced "local" component by addcomponents keywords. This 
+	keyword is an array containing the radial velocities of the components. Components are assumed to be redshifted 
+	the same way as the normal component, so their fluxes are corrected by a factor (1+z) as well. Check the help of pacsman_fit for more details. Note that for continuum placements reasons, it is better to define the main component as the central one. Note that if lines are blended you should set the /blend keyword. This will force the fluxes to be positive. The errors might not well be estimated in this case though since the parameters might touch the boundary. 
+PACSman_footprint: 
+	- added /sumcomponents keyword, which sums up the fluxes and errors of the components, if they were added in the 
+	fitting routine. Otherwise, only the first component will be used.
+PACSman_map:
+	- wrong unit was displayed by BUNIT header keyword for flux_smooth image. It was Wm-2px-1 but it should be Wm-2sr-1
+	
+3.56
+PACSman_fit:
+	- Fixed bug for maps with several cycles
+	- Chi^2 values are better determined
+	- Fixed range issues for plots
+PACSman_map:
+	- Fixed bug when creating line maps with non-finite flux values in the spectrum
+PACSman_convert:
+	- Fixed some crashes
+		
+3.6
+PACSman_fit:
+	- The cycles are now found automatically, and PACSman_fit only needs the number of cubes (regardless of whether 
+	or not they are spatially coinciding). By default, the rasters corresponding to the same spatial positions (i.e., different cycles)
+	are not concatenated before fitting. This is because the spectrum can change form one cycle to the other, even if at the same
+	spatial position. You can force combining the spatially-coinciding rasters with the /combine_rasters keyword. Because of this change, 
+	we advise reprocessing the cubes by changing the number of rasters to be the actual number of cubes, and by removing the masks that 
+	were created before (alternatively, use /cleanmask)
+	- /combine was replaced by /central3by3combine. this keyword combines the spectra of the central 3x3 spaxels and fit the resulting spectrum
+	- /nonegativefluxes was added. By default, PACSman_fit can now find negative fluxes, which is useful when doing aperture photometry later on
+	and have a reliable background subtraction. To force positive fluxes, use this new keyword
+	- /plots_publi is now obsolete, plots ready for publication are now generated automatically in PLOTSpubli_* 
+	- added subtract_rasters parameter, which is the array of rasters that are gonna be subtracted from each raster of the map prior fitting. This
+	is basically the numbers of the rasters with no emission in the map that can be safely used for spectrum subtraction. 
+
+3.61
+PACSman_footprint (and PACSman_fit if central3x3combine is set):
+	- New corrections for point source loss outside the central spaxel, outside the central 3x3, and outside the entire 5x5. 
+
+3.62
+PACSman_map:
+	- Changed weights for combining spaxels in projected grid. Previous weighting was accounting for S/N which could result in a flux
+	not fully conserved, especially when combining different observations of the same area but with different exposure times.
+PACSman_footprint:
+	- Can now be called for any raster in a map (used to work only for a pointed observation)
+	- Possibility to measure the 5x5, with a point-source correction
+PACSman_fitpsf:
+	- Can now be called for any raster in a map (used to work only for a pointed observation)
+	
+3.63 (current, ongoing changes, not final)
+PACSman_fit:
+	- fixed some bugs for the line fitting of spectra already rebinned
+PACSman_fittwopsf:
+	- new procedure to fit 2 point like sources
+PACSman_makereg2
+	- will find regions even for disconnected maps
+
+## How to use
+
+First, in HIPE do the following:
+- export level 1 cubes (PACS sliced cubes, before projection). Example:
+	for i in range(num):
+   	print 'Raster '+str(i+1)
+   	cube = slicedCubes.refs[i].product
+   	simpleFitsWriter(product=cube,file="/data/"+objname+"/PACS_spec/fits/"+linename+"mic/cube"+str(i+1)+".fits")
+- Naming convention is cubeAn.fits and cubeBn.fits for chop/nod observations (A,B are the nods, n is the raster position, set to 1 for a pointed observation), and it is cuben.fits for an unchopped observation
+   	
+Then create directories in the file system:
+- Create a directory per object
+- Within the object directory, create a directory per line, e.g., 'CII157', 'OI63', ... The naming convention is that in the pacsman_fit.pro routine
+- Place the cubes in the relevant directory
+
+Launch routines:
+- From the object directory, run pacsman_fit to fit the lines. Launch pacsman_fit with no arguments to have some help. Output products are written in the line directory. In particular, the sav file contains all the parameters and be be restored within IDL.
+
+- From the object directory, run pacsman_map to project the line flux maps on a supersampled grid. Output products are written in the line directory. pacsman_map can be called either as a GUI or in batch mode. 
+- Difference between "Flux_raw", "Flux" and "Flux_smooth"? "Flux_raw" is the map created by projecting the spaxel line flux onto an oversampled grid. "Flux" is the same but with filled holes (in the case of maps not fully sampled). "Flux_smooth" is the same as "Flux" but smoothed, the smoothing being done by rotating the image back and forth by a tiny angle, which smears a bit the spatial distribution since an interpolation in involved in the rotation. This is basically to make the map look better for the publications. For the analysis, there is little difference, except that the smoothed version has an effective PSF that is smoother (as compared to the triangular shape of the intrinsic PACS PSF).
+- From the object directory, run pacsman_analysis to examine the maps
+
+
+## Products
+
+CALLING PARAMETERS
+- calling_parameters: this is the saved commnand line to run pacsman_fit, with all the options
+
+PACSMAN FILES
+- cube*.sav: spectrum fit results, created by pacsman_fit. Used to project map in pacsman_map
+- cube*mask.fits: bad pixel mask for the spectrum fit. If present in the directory, it will be used for the fit. Remove it if you wanna re-create it
+- footprint_results.sav: output of pacsman_footprint, containing the various flux measurements in a footprint
+- OBJECT_LINE*_Flux.reg: DS9 region file created by pacsman_map, containing the edge of the map
+
+SNAPSHOTS
+- OBJECT_LINE*_Continuum.png: continuum map snapshot created by pacsman_map
+- OBJECT_LINE*_Detection.png: detection map snapshot created by pacsman_map
+- OBJECT_LINE*_Error.png: error map snapshot created by pacsman_map
+- OBJECT_LINE*_Flux.png: flux map snapshot created by pacsman_map
+- OBJECT_LINE*_Footprints.png: position of footprints, snapshot created by pacsman_map
+- OBJECT_LINE*_Broadening.png: line FWHM map snapshot created by pacsman_map
+- OBJECT_LINE*_LineToContinuum.png: line-to-continuum ratio map snapshot created by pacsman_map
+- OBJECT_LINE*_Projected_grid.png: projected subpixel grid map snapshot created by pacsman_map
+- OBJECT_LINE*_Projected_grid_flux.png: same as above but with the flux scale
+- OBJECT_LINE*_Velocity.png: radial velocity map snapshot created by pacsman_map
+- Mosaic*eps: the spectrum fit is shown per spaxel
+
+RESULT FITS CUBES
+The following cubes contain several layers: flux, error on flux, velocity, error on velocity, line broadening, error on line broadening, continuum, error on continuum 
+- OBJECT_LINE*_Flux_raw.fits: raw cube, holes within the map were not filled, no smoothing was applied. Unit is wm-2sr-1 for the flux and error
+- OBJECT_LINE*_Flux.fits: holes within the map were filled, no smoothing was applied. Unit is wm-2sr-1 for the flux and error
+- OBJECT_LINE*_Flux_wm-2px-1fits: raw cube, holes within the map were not filled, no smoothing was applied. Unit is wm-2px-1 for the flux and error
+- OBJECT_LINE*_Flux_smooth.fits: holes within the map were filled, a slight smoothing was applied by rotating the map back and forth. Unit is wm-2sr-1 for the flux and error
+
+SPECTRAL CUBE
+You can use IDL to restore the cube*.sav files, each of them containing among other things one structure named cube_spectra. 
+You can do in IDL:
+help, cube_spectra, /struc for more details on what this structure is. 
+The fields are
+- spaxel_X and spaxel_Y: number of the spaxel
+- RA and DEC of spaxel
+- raster: raster number (the number of rasters can be different than the number of cubes if the spatially-coinciding cubes are to be combined)
+- lambda (and lambda_obs): wavelength for the spectrum
+- flux (and normalized_flux, cont_subtracted_flux)
+- error
+All the lambda, flux, and error arrays have 8000 values by default. You can use the finite values and ignore the NaNs. 
+
+
+## Publications using PACSman (might not be up to date)
+
+- de Looze et al. (2014): http://labs.adsabs.harvard.edu/adsabs/abs/2014arXiv1402.4075D/
+- Farrah et al. (2013): http://labs.adsabs.harvard.edu/adsabs/abs/2013ApJ...776...38F/
+- Spoon et al. (2013): http://labs.adsabs.harvard.edu/adsabs/abs/2013ApJ...775..127S/
+- Parkin et al. (2013): http://labs.adsabs.harvard.edu/adsabs/abs/2013ApJ...776...65P/
+- Lebouteiller et al. (2012): http://labs.adsabs.harvard.edu/adsabs/abs/2012A%26A...548A..91L/
+- Sargsyan et al. (2012): http://labs.adsabs.harvard.edu/adsabs/abs/2012ApJ...755..171S/
+- Cormier et al. (2012): http://labs.adsabs.harvard.edu/adsabs/abs/2012A%26A...548A..20C/
+
